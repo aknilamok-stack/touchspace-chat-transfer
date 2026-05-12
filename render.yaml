@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: touchspace-chat-backend
+    runtime: node
+    rootDir: backend
+    plan: starter
+    buildCommand: npm ci && npm run build
+    preDeployCommand: npx prisma db push
+    startCommand: npm run start:prod
+    autoDeploy: true

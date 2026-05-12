@@ -1,0 +1,15 @@
+name: Deploy example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Configure this workflow for the target server
+        shell: bash
+        run: |
+          echo "Set up deployment for the new domain/server before enabling auto deploy."

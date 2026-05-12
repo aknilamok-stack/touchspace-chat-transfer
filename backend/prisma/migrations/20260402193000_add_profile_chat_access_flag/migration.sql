@@ -1,0 +1,2 @@
+ALTER TABLE `Profile`
+ADD COLUMN `chatAccessEnabled` BOOLEAN NOT NULL DEFAULT true;

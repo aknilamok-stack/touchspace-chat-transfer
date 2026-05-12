@@ -1,0 +1,2 @@
+ALTER TABLE `Ticket`
+  ADD COLUMN `requestCount` INTEGER NOT NULL DEFAULT 1;

@@ -1,0 +1,47 @@
+{
+  "name": "touchspace-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TouchSpace desktop application shell",
+  "author": "TouchSpace",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "electron .",
+    "dev:local": "DESKTOP_START_URL=http://localhost:3000/login electron .",
+    "dev:remote": "DESKTOP_START_URL=https://app.example.ru/login electron .",
+    "package:dir": "electron-builder --dir",
+    "package:mac": "electron-builder --mac",
+    "package:mac:zip": "electron-builder --mac zip",
+    "package:win": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.touchspace.workspace",
+    "productName": "TouchSpace Workspace",
+    "icon": "assets/icon.png",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.business",
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        "nsis"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
+  }
+}

@@ -1,0 +1,327 @@
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Profile {
+  id                      String            @id
+  authUserId              String?           @unique
+  email                   String?           @unique
+  phone                   String?
+  authLogin               String?           @unique
+  passwordHash            String?
+  passwordChangeRequired  Boolean           @default(false)
+  passwordIssuedAt        DateTime?
+  activeSessionToken      String?
+  activeSessionIssuedAt   DateTime?
+  fullName                String
+  role                    String
+  status                  String            @default("active")
+  approvalStatus          String            @default("approved")
+  companyName             String?
+  companyId               String?
+  supplierId              String?
+  supervisorProfileId     String?
+  managerStatus           String?
+  managerPresenceHeartbeatAt DateTime?
+  supplierStatus          String?
+  supplierPresenceHeartbeatAt DateTime?
+  approvalComment         String?
+  lastLoginAt             DateTime?
+  createdByAdminId        String?
+  isActive                Boolean           @default(true)
+  notificationPushEnabled Boolean           @default(true)
+  notifyClientChats       Boolean           @default(true)
+  notifySupplierChats     Boolean           @default(true)
+  notifySupplierRequests  Boolean           @default(true)
+  notifyAiHandoffs        Boolean           @default(true)
+  notifyAdminAlerts       Boolean           @default(true)
+  chatAccessEnabled       Boolean           @default(true)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  clientTickets           Ticket[]          @relation("TicketClient")
+  assignedManagerTickets  Ticket[]          @relation("TicketAssignedManager")
+  supplierTickets         Ticket[]          @relation("TicketSupplier")
+  resolvedTickets         Ticket[]          @relation("TicketResolvedByManager")
+  sentMessages            Message[]         @relation("MessageSender")
+  createdSupplierRequests SupplierRequest[] @relation("SupplierRequestCreatedByManager")
+  supplierRequests        SupplierRequest[] @relation("SupplierRequestSupplier")
+  assignedSupplierRequests SupplierRequest[] @relation("SupplierRequestAssignedSupplier")
+  reviewedRegistrations   RegistrationRequest[] @relation("RegistrationReviewedByAdmin")
+  registrationRequests    RegistrationRequest[] @relation("RegistrationLinkedProfile")
+  pushSubscriptions       PushSubscription[]
+  ticketContacts          TicketContact[]
+  adminActorEvents        AdminEvent[]      @relation("AdminEventActor")
+  adminTargetEvents       AdminEvent[]      @relation("AdminEventTarget")
+  supervisor              Profile?          @relation("ProfileSupervisor", fields: [supervisorProfileId], references: [id], onDelete: SetNull)
+  supervisedProfiles      Profile[]         @relation("ProfileSupervisor")
+
+  @@index([supervisorProfileId])
+}
+
+model AdminEvent {
+  id              String   @id @default(cuid())
+  type            String
+  title           String
+  description     String?
+  actorProfileId  String?
+  targetProfileId String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  actorProfile    Profile? @relation("AdminEventActor", fields: [actorProfileId], references: [id], onDelete: SetNull)
+  targetProfile   Profile? @relation("AdminEventTarget", fields: [targetProfileId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+  @@index([actorProfileId, createdAt])
+  @@index([targetProfileId, createdAt])
+}
+
+model Ticket {
+  id                       String    @id @default(cuid())
+  title                    String
+  status                   String
+  conversationMode         String    @default("manager")
+  currentHandlerType       String    @default("manager")
+  aiEnabled                Boolean   @default(false)
+  aiActivatedAt            DateTime?
+  aiDeactivatedAt          DateTime?
+  handedToManagerAt        DateTime?
+  claimRequiredAt         DateTime?
+  claimedAt               DateTime?
+  claimMissedAt           DateTime?
+  returnedToQueueAt       DateTime?
+  lastClientMessageAt     DateTime?
+  lastManagerReplyAt      DateTime?
+  rescueQueuedAt          DateTime?
+  aiResolved               Boolean   @default(false)
+  pinned                   Boolean   @default(false)
+  invitedManagerIds        Json
+  invitedManagerNames      Json
+  assignedManagerId        String?
+  assignedManagerName String?
+  lastResolvedByManagerId String?
+  lastResolvedByManagerName String?
+  lastResolvedByRole       String?
+  managerRating            Int?
+  managerRatingSubmittedAt DateTime?
+  clientId                 String?
+  clientName               String?
+  tradePointExternalId     String?
+  tradePointName           String?
+  clientEmail              String?
+  clientPhone              String?
+  currentUserId            String?
+  currentUserEmail         String?
+  currentUserPhone         String?
+  currentUserXmlId         String?
+  isSuperuser              Boolean?
+  superuserId              String?
+  superuserEmail           String?
+  superuserPhone           String?
+  canonicalEmail           String?
+  canonicalEmailSource     String?
+  lockedBySuperuser        Boolean   @default(false)
+  avatarColor              String?
+  avatarEmoji              String?
+  supplierId               String?
+  supplierName             String?
+  priority                 String?
+  orderId                  String?
+  productId                String?
+  requestCount             Int       @default(1)
+  firstResponseStartedAt DateTime?
+  firstResponseAt          DateTime?
+  firstResponseTime        Int?
+  firstResponseBreached Boolean @default(false)
+  resolutionTime           Int?
+  lastMessageAt            DateTime?
+  resolvedAt               DateTime?
+  slaBreached              Boolean   @default(false)
+  supplierEscalatedAt      DateTime?
+  topicCategory            String?
+  sentiment                String?
+  aiSummary                String?
+  aiTags                   Json?
+  insightFlags             Json?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  closedAt                 DateTime?
+
+  clientProfile           Profile?          @relation("TicketClient", fields: [clientId], references: [id], onDelete: SetNull)
+  assignedManagerProfile  Profile?          @relation("TicketAssignedManager", fields: [assignedManagerId], references: [id], onDelete: SetNull)
+  supplierProfile         Profile?          @relation("TicketSupplier", fields: [supplierId], references: [id], onDelete: SetNull)
+  resolvedByManagerProfile Profile?         @relation("TicketResolvedByManager", fields: [lastResolvedByManagerId], references: [id], onDelete: SetNull)
+  messages                Message[]
+  supplierRequests        SupplierRequest[]
+  contacts                TicketContact[]
+  pageViews               TicketPageView[]
+}
+
+model ClientVisualIdentity {
+  key         String   @id
+  displayName String?
+  avatarColor String
+  avatarEmoji String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([avatarColor, avatarEmoji])
+}
+
+model TicketContact {
+  id          String   @id @default(cuid())
+  ticketId     String
+  type         String
+  value        String
+  normalizedValue String
+  label        String?
+  createdByProfileId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  createdByProfile Profile? @relation(fields: [createdByProfileId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId, type])
+}
+
+model TicketPageView {
+  id           String   @id @default(cuid())
+  ticketId      String
+  tradePointId  String?
+  pageUrl       String
+  pagePath      String
+  pageTitle     String?
+  pageName      String?
+  routeType     String?
+  entityId      String?
+  entityName    String?
+  referrer      String?
+  sourceType    String   @default("page_view")
+  visitedAt     DateTime @default(now())
+
+  ticket        Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, visitedAt])
+  @@index([tradePointId, visitedAt])
+}
+
+model Message {
+  id              String    @id @default(cuid())
+  content         String    @db.LongText
+  senderType      String
+  senderRole      String?
+  replyToMessageId String?
+  replyToContent  String?   @db.LongText
+  status          String    @default("sent")
+  deliveryStatus  String    @default("sent")
+  messageType     String    @default("text")
+  transport       String    @default("chat")
+  toEmail         String?
+  fromEmail       String?
+  subject         String?
+  messageId       String?   @unique
+  inReplyTo       String?   @db.LongText
+  references      String?   @db.LongText
+  isInternal      Boolean   @default(false)
+  ticketId        String
+  senderProfileId String?
+  readAt          DateTime?
+  createdAt       DateTime  @default(now())
+
+  ticket         Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderProfile  Profile? @relation("MessageSender", fields: [senderProfileId], references: [id], onDelete: SetNull)
+}
+
+model ManagerMessageSuggestion {
+  id                   String   @id @default(cuid())
+  managerId            String
+  phraseText           String
+  phraseTextNormalized String
+  usageCount           Int      @default(1)
+  lastUsedAt           DateTime @default(now())
+  isHidden             Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([managerId, phraseTextNormalized])
+  @@index([managerId, phraseTextNormalized])
+  @@index([managerId, lastUsedAt])
+}
+
+model SupplierRequest {
+  id                 String    @id @default(cuid())
+  ticketId           String
+  supplierId         String?
+  supplierName       String
+  assignedSupplierProfileId   String?
+  assignedSupplierProfileName String?
+  requestText        String
+  status             String    @default("pending")
+  slaMinutes         Int?
+  createdByManagerId String?
+  claimedAt          DateTime?
+  claimRequiredAt    DateTime?
+  claimMissedAt      DateTime?
+  returnedToQueueAt  DateTime?
+  requestedAt        DateTime?
+  lastManagerMessageAt DateTime?
+  lastSupplierReplyAt  DateTime?
+  responseStartedAt  DateTime?
+  firstResponseAt    DateTime?
+  respondedAt        DateTime?
+  responseTime       Int?
+  responseBreached   Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  closedAt           DateTime?
+
+  ticket            Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  supplierProfile   Profile? @relation("SupplierRequestSupplier", fields: [supplierId], references: [id], onDelete: SetNull)
+  createdByManager  Profile? @relation("SupplierRequestCreatedByManager", fields: [createdByManagerId], references: [id], onDelete: SetNull)
+  assignedSupplierProfile Profile? @relation("SupplierRequestAssignedSupplier", fields: [assignedSupplierProfileId], references: [id], onDelete: SetNull)
+}
+
+model RegistrationRequest {
+  id                String    @id @default(cuid())
+  email             String
+  fullName          String
+  companyName       String?
+  role              String
+  status            String    @default("pending")
+  comment           String?
+  profileId         String?
+  reviewedByAdminId String?
+  reviewedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  profile           Profile?  @relation("RegistrationLinkedProfile", fields: [profileId], references: [id], onDelete: SetNull)
+  reviewedByAdmin   Profile?  @relation("RegistrationReviewedByAdmin", fields: [reviewedByAdminId], references: [id], onDelete: SetNull)
+
+  @@index([status, role, createdAt])
+}
+
+model PushSubscription {
+  id          String   @id @default(cuid())
+  profileId   String
+  role        String
+  endpoint    String   @unique
+  p256dh      String
+  auth        String
+  userAgent   String?
+  deviceLabel String?
+  isActive    Boolean  @default(true)
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, role, isActive])
+}

@@ -1,0 +1,40 @@
+.DS_Store
+
+# Root and package manager artifacts
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Frontend build output
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/coverage/
+frontend/next-env.d.ts
+frontend/public/downloads/*.zip
+
+# Backend build output
+backend/dist/
+backend/build/
+backend/coverage/
+backend/.nyc_output/
+backend/.temp/
+backend/.tmp/
+
+# Environment files
+frontend/.env*
+backend/.env
+backend/.env.development.local
+backend/.env.test.local
+backend/.env.production.local
+backend/.env.local
+
+# Misc
+*.log
+*.pid
+*.pid.lock
+*.seed
+*.tsbuildinfo
+.vscode/
